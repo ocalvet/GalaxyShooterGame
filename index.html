@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Sample online game</title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="drawing-board">
+        Need to get a new browser... look for Chrome
+    </canvas>
+    <script>
+
+        function sizeCanvas(c) {
+            c.canvas.width = window.innerWidth;
+            c.canvas.height = window.innerHeight;
+        }
+
+        var Ship = function(x, y, speed) {
+            this.x = x;
+            this.y = y;
+            this.speed = speed;
+            this.width = 150;
+            this.height = 100;
+            this.image = new Image();
+            this.image.src = "spaceship.png";
+            this.angle = 0;
+        }
+
+        Ship.prototype = function() {
+
+            var
+                moveUp = function() {
+                    this.y -= this.speed
+                },
+                moveDown = function() {
+                    this.y += this.speed
+                },
+                moveLeft = function() {
+                    this.x -= this.speed
+                },
+                moveRight = function() {
+                    this.x += this.speed
+                },
+
+                drawShip = function(ctx) {
+//                    ctx.save(); //saves the state of canvas
+//                    ctx.translate(this.width, this.height); //let's translate
+//                    ctx.rotate(Math.PI / 180 * (this.angle += 5)); //increment the angle and rotate the image
+                    ctx.drawImage(this.image, this.x, this.y);
+//                    ctx.drawImage(img, -cache.width / 2, -cache.height / 2, cache.width, cache.height); //draw the image ;)
+//                    ctx.restore(); //restore the state of canvas
+//                    ctx.fillStyle="#FF0000";
+//                    ctx.fillRect(this.x,this.y,this.width,this.height);
+                };
+
+            return {
+                up: moveUp,
+                down: moveDown,
+                left: moveLeft,
+                right: moveRight,
+                draw: drawShip
+            };
+        }();
+
+        var Game = function(c, ship) {
+            this.ctx = c;
+            this.ship = ship;
+        };
+
+        Game.prototype = function() {
+            var
+                x = 10,
+                direction = 1,
+                l = 0,
+                TOTAL_BG_PARTICLES = 1000,
+                backgroundParticles = [],
+                getRandomInt = function(min, max) {
+                    return Math.floor(Math.random() * (max - min)) + min;
+                },
+                fillBackgroundParticles = function() {
+                    for (var i = 0; i < TOTAL_BG_PARTICLES; i++) {
+                        backgroundParticles[i] = {
+                            x: getRandomInt(0, this.ctx.canvas.width),
+                            y: getRandomInt(0, this.ctx.canvas.height),
+                            size: 2,
+                            speed: getRandomInt(1,5)
+                        }
+                    }
+                },
+                moveAndDrawParticles = function() {
+                    var ctx = this.ctx;
+                    backgroundParticles.forEach(function(particle) {
+                        // Move particle
+                        particle.x = particle.x < 0 ? ctx.canvas.width : particle.x - particle.speed;
+                        // Draw particle
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, particle.size, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = 'green';
+                        ctx.fill();
+                    });
+                },
+                drawBackgound = function() {
+                    // Fill the background starts if needed
+                    if (!backgroundParticles.length > 0) {
+                        fillBackgroundParticles.call(this);
+                    }
+
+                    moveAndDrawParticles.call(this);
+                },
+
+                loop = function() {
+                    this.ctx.clearRect(0,0,this.ctx.canvas.width,this.ctx.canvas.height);
+                    drawBackgound.call(this);
+                    this.ship.draw(this.ctx);
+                };
+
+            return {
+                loop: loop
+            }
+        }();
+
+        window.onload = function(){
+            var canvasElement = document.getElementById("drawing-board");
+            var ctx = canvasElement.getContext("2d");
+            window.addEventListener('resize', function(){
+                sizeCanvas(ctx);
+            });
+            sizeCanvas(ctx);
+            var game = new Game(ctx, new Ship(10,ctx.canvas.height/2,12));
+            var interval = setInterval(function() {
+                game.loop();
+            }, 15);
+
+            window.onkeydown = function(k) {
+                switch (k.keyCode) {
+                    case 27:
+                        clearInterval(interval);
+                        break;
+                    // Up
+                    case 38:
+                        game.ship.up();
+                        break;
+                    // Down
+                    case 40:
+                        game.ship.down();
+                        break;
+                    // Left
+                    case 37:
+                        game.ship.left();
+                        break;
+                    // Right
+                    case 39:
+                        game.ship.right();
+                        break;
+                }
+            };
+        };
+    </script>
+</body>
+</html>
