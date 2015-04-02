@@ -11,6 +11,16 @@
             height: 100%;
             overflow: hidden;
         }
+
+        #drawing-board {
+            position: relative;
+        }
+
+        #game-menu {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
     </style>
     <script src="js/Game.js" type="text/javascript"></script>
     <script src="js/Ship.js" type="text/javascript"></script>
@@ -19,13 +29,39 @@
     <canvas id="drawing-board">
         Need to get a new browser... look for Chrome
     </canvas>
+    <ul id="game-menu">
+        <li>1</li>
+        <li>2</li>
+        <li>3</li>
+        <li>4</li>
+    </ul>
     <script>
+
+        var FPS = 1000 / 18;
 
         function sizeCanvas(c) {
             c.canvas.width = window.innerWidth;
             c.canvas.height = window.innerHeight;
         }
 
+        function showMenu() {
+            var menu = document.getElementById("game-menu");
+            menu.style.display = 'block';
+        }
+
+        function hideMenu() {
+            var menu = document.getElementById("game-menu");
+            menu.style.display = 'none';
+        }
+
+        function continueGame(game) {
+            hideMenu();
+            return setInterval(function() {
+                game.loop();
+            }, FPS);
+        }
+
+        // Create game after page is loaded
         window.onload = function(){
             var canvasElement = document.getElementById("drawing-board");
             var ctx = canvasElement.getContext("2d");
@@ -33,33 +69,74 @@
                 sizeCanvas(ctx);
             });
             sizeCanvas(ctx);
-            var game = new Game(ctx, new Ship(10,ctx.canvas.height/2,12));
-            var interval = setInterval(function() {
-                game.loop();
-            }, 15);
+            var ship = new Ship(ctx, 5, ctx.canvas.height/2 - 50,12);
+            var game = new Game(ctx, ship);
+            var interval = continueGame(game);
 
-            window.onkeydown = function(k) {
-                switch (k.keyCode) {
-                    case 27:
-                        clearInterval(interval);
-                        break;
-                    // Up
-                    case 38:
-                        game.ship.up();
-                        break;
-                    // Down
-                    case 40:
-                        game.ship.down();
-                        break;
-                    // Left
-                    case 37:
-                        game.ship.left();
-                        break;
-                    // Right
-                    case 39:
-                        game.ship.right();
-                        break;
+            // Map game key events
+            var keyMap = [];
+            window.onkeydown = window.onkeyup = function(k) {
+                k = k || event;
+                keyMap[k.keyCode] = k.type == 'keydown';
+
+                if(keyMap[27]) {
+                    clearInterval(interval);
+                    showMenu();
                 }
+
+                if(keyMap[13]) {
+                    interval = continueGame(game);
+                }
+
+                if(keyMap[38]) {
+                    game.ship.up();
+                }
+
+                if(keyMap[40]) {
+                    game.ship.down();
+                }
+
+                if(keyMap[37]) {
+                    game.ship.left();
+                }
+
+                if(keyMap[39]) {
+                    game.ship.right();
+                }
+
+                if(keyMap[32]) {
+                    game.ship.shoot();
+                }
+//                switch (k.keyCode) {
+//                    // ESC
+//                    case 27:
+//                        clearInterval(interval);
+//                        showMenu();
+//                        break;
+//                    case 13:
+//                        interval = continueGame(game);
+//                        break;
+//                    // Up
+//                    case 38:
+//                        game.ship.up();
+//                        break;
+//                    // Down
+//                    case 40:
+//                        game.ship.down();
+//                        break;
+//                    // Left
+//                    case 37:
+//                        game.ship.left();
+//                        break;
+//                    // Right
+//                    case 39:
+//                        game.ship.right();
+//                        break;
+//                    // Space bar - shoot
+//                    case 32:
+//                        game.ship.shoot();
+//                        break;
+//                }
             };
         };
     </script>
